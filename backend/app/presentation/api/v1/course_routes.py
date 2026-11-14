@@ -5,8 +5,10 @@ from app.domain.entities.user import User
 from app.application.services.course_service import CourseService
 from app.application.services.enrollment_service import EnrollmentService
 from app.application.dtos.course_dtos import CreateCourseDTO, UpdateCourseDTO
-from app.presentation.dependencies.auth import get_current_user, require_teacher
-from app.presentation.dependencies.services import get_course_service, get_enrollment_service
+from app.presentation.dependencies.auth import get_current_user, require_teacher, ensure_course_access
+from app.presentation.dependencies.services import get_course_service, get_enrollment_service, get_course_repo, get_enrollment_repo
+from app.application.interfaces.repositories.i_course_repository import ICourseRepository
+from app.application.interfaces.repositories.i_enrollment_repository import IEnrollmentRepository
 from app.presentation.schemas.course_schemas import (
     CourseResponse, CreateCourseRequest, UpdateCourseRequest,
     EnrollStudentRequest, InviteStudentRequest
@@ -78,7 +80,10 @@ async def get_course(
     id: UUID,
     current_user: User = Depends(get_current_user),
     course_service: CourseService = Depends(get_course_service),
+    course_repo: ICourseRepository = Depends(get_course_repo),
+    enrollment_repo: IEnrollmentRepository = Depends(get_enrollment_repo),
 ):
+    await ensure_course_access(id, current_user, course_repo, enrollment_repo)
     course = await course_service.get_course_by_id(id)
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")

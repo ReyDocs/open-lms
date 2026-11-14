@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, status
+from app.config import settings
 from app.domain.entities.user import User
 from app.infrastructure.security.jwt_handler import JWTHandler
 from app.infrastructure.external.google_oauth_service import GoogleOAuthService
@@ -48,14 +49,13 @@ async def google_callback(
     now = datetime.now(timezone.utc)
     if not user:
         # Auto-create user on first login, default role is 'student'
-        default_role = req.role if req.role in ("admin", "teacher", "student") else "student"
         user = User(
             id=uuid4(),
             email=email,
             full_name=user_info.get("full_name") or email.split("@")[0].title(),
             avatar_url=user_info.get("avatar_url"),
             google_id=user_info.get("google_id"),
-            role=default_role,
+            role="student",
             created_at=now,
             updated_at=now,
         )
@@ -102,6 +102,9 @@ async def dev_login(
     refresh_token_repo: SQLAlchemyRefreshTokenRepository = Depends(get_refresh_token_repo),
 ):
     """Convenience development endpoint for fast role switching during demos/testing."""
+    if settings.app_env.lower() not in {"development", "dev", "test"}:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+
     email = req.email.lower().strip()
     user = await user_repo.get_by_email(email)
     now = datetime.now(timezone.utc)

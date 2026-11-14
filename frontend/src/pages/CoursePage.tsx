@@ -18,6 +18,8 @@ import {
   Clock,
   UserPlus,
   ExternalLink,
+  Paperclip,
+  X,
 } from 'lucide-react';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { apiClient } from '@/lib/api-client';
@@ -26,6 +28,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Modal } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { RichTextEditor } from '@/components/RichTextEditor';
 import { formatDate, formatFileSize } from '@/lib/utils';
 
 export const CoursePage: React.FC = () => {
@@ -54,6 +57,7 @@ export const CoursePage: React.FC = () => {
   const [addAnnouncementOpen, setAddAnnouncementOpen] = useState(false);
   const [annTitle, setAnnTitle] = useState('');
   const [annContent, setAnnContent] = useState('');
+  const [annAttachments, setAnnAttachments] = useState<any[]>([]);
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -164,7 +168,7 @@ export const CoursePage: React.FC = () => {
   });
 
   const createAnnouncementMutation = useMutation({
-    mutationFn: async (payload: { title: string; content: string }) => {
+    mutationFn: async (payload: { title: string; content: string; attachments: any[] }) => {
       const res = await apiClient.post(`/courses/${id}/announcements`, payload);
       return res.data;
     },
@@ -173,7 +177,20 @@ export const CoursePage: React.FC = () => {
       setAddAnnouncementOpen(false);
       setAnnTitle('');
       setAnnContent('');
+      setAnnAttachments([]);
     },
+  });
+
+  const uploadAnnouncementAttachmentMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await apiClient.post(`/courses/${id}/announcements/attachments`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return res.data;
+    },
+    onSuccess: (attachment) => setAnnAttachments((current) => [...current, attachment]),
   });
 
   const inviteStudentMutation = useMutation({
@@ -609,8 +626,18 @@ export const CoursePage: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  window.open(`/api/v1/courses/${id}/gradebook/export`, '_blank');
+                onClick={async () => {
+                  const response = await apiClient.get(`/courses/${id}/gradebook/export`, {
+                    responseType: 'blob',
+                  });
+                  const downloadUrl = URL.createObjectURL(response.data);
+                  const link = document.createElement('a');
+                  link.href = downloadUrl;
+                  link.download = `course_${id}_gradebook.csv`;
+                  document.body.appendChild(link);
+                  link.click();
+                  link.remove();
+                  URL.revokeObjectURL(downloadUrl);
                 }}
                 className="gap-1.5"
               >
@@ -842,7 +869,7 @@ export const CoursePage: React.FC = () => {
               createAssignmentMutation.mutate({
                 module_id: assignModuleId,
                 title: assignTitle,
-                description: assignDesc || 'Submit your work for this assignment.',
+                description: assignDesc || '<p>Submit your work for this assignment.</p>',
                 total_points: Number(assignPoints),
                 due_date: new Date(assignDueDate).toISOString(),
                 status: assignStatus,
@@ -910,12 +937,7 @@ export const CoursePage: React.FC = () => {
           </div>
           <div className="space-y-1">
             <label className="text-xs font-semibold">Description & Instructions</label>
-            <textarea
-              className="flex min-h-[70px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm"
-              placeholder="Provide instructions and submission requirements..."
-              value={assignDesc}
-              onChange={(e) => setAssignDesc(e.target.value)}
-            />
+            <RichTextEditor value={assignDesc} onChange={setAssignDesc} />
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => setAddAssignmentOpen(false)}>
@@ -941,7 +963,8 @@ export const CoursePage: React.FC = () => {
             if (annTitle && annContent) {
               createAnnouncementMutation.mutate({
                 title: annTitle,
-                content: `<p>${annContent.replace(/\n/g, '<br/>')}</p>`,
+                content: annContent,
+                attachments: annAttachments,
               });
             }
           }}
@@ -958,19 +981,49 @@ export const CoursePage: React.FC = () => {
           </div>
           <div className="space-y-1">
             <label className="text-xs font-semibold">Content *</label>
-            <textarea
-              className="flex min-h-[120px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm"
-              placeholder="Write your announcement message..."
-              required
-              value={annContent}
-              onChange={(e) => setAnnContent(e.target.value)}
-            />
+            <RichTextEditor value={annContent} onChange={setAnnContent} />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-semibold">File Attachments</label>
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-accent">
+              <Paperclip className="h-4 w-4" />
+              {uploadAnnouncementAttachmentMutation.isPending ? 'Uploading…' : 'Attach file'}
+              <input
+                type="file"
+                className="sr-only"
+                accept=".pdf,.docx,.pptx,.xlsx,.jpg,.jpeg,.png,.zip,.mp4,.mp3,.csv,.txt"
+                disabled={uploadAnnouncementAttachmentMutation.isPending}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) uploadAnnouncementAttachmentMutation.mutate(file);
+                  event.currentTarget.value = '';
+                }}
+              />
+            </label>
+            {annAttachments.map((attachment, index) => (
+              <div key={`${attachment.file_url}-${index}`} className="flex items-center justify-between rounded border px-3 py-2 text-xs">
+                <span className="truncate">{attachment.file_name} ({formatFileSize(attachment.file_size)})</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Remove ${attachment.file_name}`}
+                  onClick={() => setAnnAttachments((current) => current.filter((_, i) => i !== index))}
+                  className="h-7 w-7 shrink-0"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))}
+            {uploadAnnouncementAttachmentMutation.isError && (
+              <p role="alert" className="text-xs text-destructive">Upload failed. Check the file type and 25 MB size limit, then try again.</p>
+            )}
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => setAddAnnouncementOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={createAnnouncementMutation.isPending}>
+            <Button type="submit" disabled={createAnnouncementMutation.isPending || uploadAnnouncementAttachmentMutation.isPending}>
               Post Announcement
             </Button>
           </div>

@@ -9,6 +9,8 @@ from .notification_model import NotificationModel
 from .calendar_event_model import CalendarEventModel
 from .refresh_token_model import RefreshTokenModel
 from .file_resource_model import FileResourceModel
+from .system_setting_model import SystemSettingModel
+from .assignment_reminder_model import AssignmentReminderModel
 
 __all__ = [
     "UserModel",
@@ -23,4 +25,6 @@ __all__ = [
     "CalendarEventModel",
     "RefreshTokenModel",
     "FileResourceModel",
+    "SystemSettingModel",
+    "AssignmentReminderModel",
 ]

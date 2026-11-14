@@ -30,7 +30,8 @@ class SupabaseStorageService(IStorageService):
     async def upload_file(
         self, file_bytes: bytes, filename: str, content_type: str, bucket: str = "attachments"
     ) -> str:
-        unique_name = f"{uuid.uuid4()}_{filename}"
+        safe_filename = os.path.basename(filename.replace("\\", "/")) or "upload"
+        unique_name = f"{uuid.uuid4()}_{safe_filename}"
 
         if self.client:
             try:

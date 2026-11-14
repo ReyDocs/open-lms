@@ -6,6 +6,7 @@ from app.application.interfaces.repositories.i_enrollment_repository import IEnr
 from app.application.interfaces.repositories.i_course_repository import ICourseRepository
 from app.application.interfaces.repositories.i_user_repository import IUserRepository
 from app.application.interfaces.services.i_email_service import IEmailService
+from app.application.services.notification_service import NotificationService
 from app.application.dtos.user_dtos import UserResponseDTO
 from app.domain.entities.enrollment import Enrollment
 from app.domain.entities.user import User
@@ -18,11 +19,13 @@ class EnrollmentService:
         course_repo: ICourseRepository,
         user_repo: IUserRepository,
         email_service: Optional[IEmailService] = None,
+        notification_service: Optional[NotificationService] = None,
     ):
         self.enrollment_repo = enrollment_repo
         self.course_repo = course_repo
         self.user_repo = user_repo
         self.email_service = email_service
+        self.notification_service = notification_service
 
     async def enroll_students_from_pool(
         self, course_id: UUID, student_ids: List[UUID], teacher: User
@@ -52,6 +55,15 @@ class EnrollmentService:
                     enrolled_at=now,
                 )
                 await self.enrollment_repo.enroll(enrollment)
+                if self.notification_service:
+                    await self.notification_service.create_notification(
+                        user_id=student.id,
+                        notif_type="enrollment",
+                        title=f"Enrolled in {course.code}",
+                        message=f"You have been added to {course.title}.",
+                        link=f"/courses/{course_id}",
+                        recipient_email=student.email,
+                    )
 
             enrolled_students.append(
                 UserResponseDTO(
@@ -93,7 +105,8 @@ class EnrollmentService:
             student = await self.user_repo.create(student)
 
         # Check existing enrollment
-        if not await self.enrollment_repo.is_enrolled(student.id, course_id):
+        already_enrolled = await self.enrollment_repo.is_enrolled(student.id, course_id)
+        if not already_enrolled:
             enrollment = Enrollment(
                 id=uuid4(),
                 user_id=student.id,
@@ -103,8 +116,17 @@ class EnrollmentService:
             )
             await self.enrollment_repo.enroll(enrollment)
 
+            if self.notification_service:
+                await self.notification_service.create_notification(
+                    user_id=student.id,
+                    notif_type="enrollment",
+                    title=f"Enrolled in {course.code}",
+                    message=f"You have been enrolled in {course.title}. Sign in with Google to view course materials.",
+                    link=f"/courses/{course_id}",
+                )
+
         # Send invite email
-        if self.email_service:
+        if self.email_service and not already_enrolled:
             invite_html = f"""
             <div style="font-family: sans-serif; padding: 20px;">
                 <h2>You've been invited to {course.title}!</h2>
@@ -137,7 +159,12 @@ class EnrollmentService:
         course = await self.course_repo.get_by_id(course_id)
         if not course:
             raise ValueError("Course not found")
-        if not user.is_teacher() and not await self.enrollment_repo.is_enrolled(user.id, course_id):
+        if user.is_admin():
+            pass
+        elif user.is_teacher():
+            if course.teacher_id != user.id:
+                raise PermissionError("Only the course teacher can view the course roster")
+        elif not await self.enrollment_repo.is_enrolled(user.id, course_id):
             raise PermissionError("Access denied")
 
         students = await self.enrollment_repo.list_students_by_course(course_id)

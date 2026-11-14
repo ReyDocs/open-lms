@@ -27,6 +27,15 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
     refetchInterval: 30000,
   });
 
+  const { data: appSettings } = useQuery({
+    queryKey: ['public-app-settings'],
+    queryFn: async () => {
+      const res = await apiClient.get('/admin/settings/public');
+      return res.data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -51,10 +60,14 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
           onClick={() => navigate('/dashboard')}
           className="flex items-center gap-2 font-bold text-lg text-primary cursor-pointer select-none"
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow">
-            <BookOpen className="h-5 w-5" />
+          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-primary text-primary-foreground shadow">
+            {appSettings?.app_logo_url ? (
+              <img src={appSettings.app_logo_url} alt="" className="h-full w-full object-contain" />
+            ) : (
+              <BookOpen className="h-5 w-5" />
+            )}
           </div>
-          <span>OpenLMS</span>
+          <span>{appSettings?.app_name || 'OpenLMS'}</span>
         </div>
       </div>
 

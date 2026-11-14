@@ -4,8 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from app.domain.entities.user import User
 from app.application.services.module_service import ModuleService
 from app.application.dtos.module_dtos import CreateModuleDTO, UpdateModuleDTO
-from app.presentation.dependencies.auth import get_current_user, require_teacher
-from app.presentation.dependencies.services import get_module_service
+from app.presentation.dependencies.auth import get_current_user, require_teacher, ensure_course_access
+from app.presentation.dependencies.services import get_module_service, get_course_repo, get_enrollment_repo
+from app.application.interfaces.repositories.i_course_repository import ICourseRepository
+from app.application.interfaces.repositories.i_enrollment_repository import IEnrollmentRepository
 from app.presentation.schemas.module_schemas import (
     ModuleResponse, CreateModuleRequest, UpdateModuleRequest,
     ReorderModuleRequest, FileResourceResponse
@@ -34,7 +36,10 @@ async def list_course_modules(
     course_id: UUID,
     current_user: User = Depends(get_current_user),
     module_service: ModuleService = Depends(get_module_service),
+    course_repo: ICourseRepository = Depends(get_course_repo),
+    enrollment_repo: IEnrollmentRepository = Depends(get_enrollment_repo),
 ):
+    await ensure_course_access(course_id, current_user, course_repo, enrollment_repo)
     return await module_service.list_modules(course_id)
 
 

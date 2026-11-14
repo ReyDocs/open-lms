@@ -158,6 +158,14 @@ class GradingService:
         return output.getvalue()
 
     async def get_my_grades(self, course_id: UUID, student: User) -> List[StudentGradeDTO]:
+        if not student.is_student():
+            raise PermissionError("Only students can access personal grades")
+        course = await self.course_repo.get_by_id(course_id)
+        if not course:
+            raise ValueError("Course not found")
+        if not await self.enrollment_repo.is_enrolled(student.id, course_id):
+            raise PermissionError("Student is not enrolled in this course")
+
         assignments = await self.assignment_repo.list_by_course(course_id, published_only=True)
         results: List[StudentGradeDTO] = []
 

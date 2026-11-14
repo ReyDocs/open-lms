@@ -1,11 +1,16 @@
 from contextlib import asynccontextmanager
+import asyncio
+import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 
 from app.config import settings
-from app.infrastructure.database.connection import engine, Base
+from sqlalchemy import select
+from app.infrastructure.database.connection import engine, Base, AsyncSessionLocal
 from app.infrastructure.database.models import *  # noqa: F403, F401
+from app.infrastructure.database.models.system_setting_model import SystemSettingModel
+from app.infrastructure.jobs.due_date_reminders import send_due_date_reminders
 from app.presentation.api.v1.router import api_v1_router
 from app.presentation.middleware.error_handler import (
     http_exception_handler,
@@ -13,15 +18,42 @@ from app.presentation.middleware.error_handler import (
     general_exception_handler,
 )
 
+logger = logging.getLogger(__name__)
+
+
+async def _run_due_date_reminders():
+    while True:
+        try:
+            await send_due_date_reminders()
+        except Exception:
+            logger.exception("Due date reminder job failed")
+        await asyncio.sleep(5 * 60)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize database tables on startup
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    yield
-    # Cleanup on shutdown
-    await engine.dispose()
+    async with AsyncSessionLocal() as session:
+        rows = (await session.execute(select(SystemSettingModel))).scalars().all()
+        persisted_settings = {row.key: row.value for row in rows}
+        settings.app_name = persisted_settings.get("app_name", settings.app_name)
+        settings.app_logo_url = persisted_settings.get("app_logo_url") or None
+        settings.support_email = persisted_settings.get("support_email", settings.support_email)
+        settings.maintenance_mode = persisted_settings.get(
+            "maintenance_mode", str(settings.maintenance_mode)
+        ).lower() == "true"
+    reminder_task = asyncio.create_task(_run_due_date_reminders())
+    try:
+        yield
+    finally:
+        reminder_task.cancel()
+        try:
+            await reminder_task
+        except asyncio.CancelledError:
+            pass
+        await engine.dispose()
 
 
 def create_app() -> FastAPI:

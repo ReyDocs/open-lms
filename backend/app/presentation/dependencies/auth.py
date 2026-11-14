@@ -1,13 +1,33 @@
 from typing import Optional
 from uuid import UUID
 from fastapi import Depends, HTTPException, status
+from app.config import settings
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.application.interfaces.repositories.i_user_repository import IUserRepository
 from app.domain.entities.user import User
 from app.presentation.dependencies.services import get_jwt_handler, get_user_repo
 from app.infrastructure.security.jwt_handler import JWTHandler
+from app.application.interfaces.repositories.i_course_repository import ICourseRepository
+from app.application.interfaces.repositories.i_enrollment_repository import IEnrollmentRepository
 
 security = HTTPBearer(auto_error=False)
+
+
+async def ensure_course_access(
+    course_id: UUID,
+    user: User,
+    course_repo: ICourseRepository,
+    enrollment_repo: IEnrollmentRepository,
+):
+    """Enforce the PRD rule that only course staff and enrolled students see content."""
+    course = await course_repo.get_by_id(course_id)
+    if not course:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
+    if user.is_admin() or (user.is_teacher() and course.teacher_id == user.id):
+        return course
+    if user.role == "student" and await enrollment_repo.is_enrolled(user.id, course_id):
+        return course
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Course access required")
 
 
 async def get_current_user_optional(
@@ -43,6 +63,8 @@ async def get_current_user(
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    if settings.maintenance_mode and not user.is_admin():
+        raise HTTPException(status_code=503, detail="OpenLMS is temporarily in maintenance mode")
     return user
 
 

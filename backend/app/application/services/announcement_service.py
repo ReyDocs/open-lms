@@ -1,4 +1,3 @@
-import bleach
 from typing import List, Optional
 from uuid import UUID, uuid4
 from datetime import datetime, timezone
@@ -12,15 +11,7 @@ from app.application.dtos.announcement_dtos import (
 )
 from app.domain.entities.announcement import Announcement, AnnouncementAttachment
 from app.domain.entities.user import User
-
-ALLOWED_TAGS = [
-    "a", "abbr", "acronym", "b", "blockquote", "code", "em", "i", "li", "ol", "strong", "ul",
-    "p", "h1", "h2", "h3", "h4", "h5", "h6", "br", "hr", "span", "table", "tbody", "tr", "td", "th"
-]
-ALLOWED_ATTRIBUTES = {
-    "a": ["href", "title", "target"],
-    "span": ["class"],
-}
+from app.application.services.rich_text import sanitize_rich_text
 
 
 class AnnouncementService:
@@ -46,9 +37,7 @@ class AnnouncementService:
             raise PermissionError("Only the course teacher can create announcements")
 
         # Sanitize HTML with bleach
-        clean_content = bleach.clean(
-            dto.content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES, strip=True
-        )
+        clean_content = sanitize_rich_text(dto.content)
 
         now = datetime.now(timezone.utc)
         announcement_id = uuid4()
@@ -118,9 +107,7 @@ class AnnouncementService:
         if dto.title is not None:
             ann.title = dto.title.strip()
         if dto.content is not None:
-            ann.content = bleach.clean(
-                dto.content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES, strip=True
-            )
+            ann.content = sanitize_rich_text(dto.content)
 
         updated = await self.announcement_repo.update(ann)
         author = await self.user_repo.get_by_id(updated.author_id)

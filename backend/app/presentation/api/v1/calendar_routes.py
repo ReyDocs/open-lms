@@ -5,8 +5,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.domain.entities.user import User
 from app.application.services.calendar_service import CalendarService
 from app.application.dtos.calendar_dtos import CreateCalendarEventDTO, UpdateCalendarEventDTO
-from app.presentation.dependencies.auth import get_current_user, require_teacher
-from app.presentation.dependencies.services import get_calendar_service
+from app.presentation.dependencies.auth import get_current_user, require_teacher, ensure_course_access
+from app.presentation.dependencies.services import get_calendar_service, get_course_repo, get_enrollment_repo
+from app.application.interfaces.repositories.i_course_repository import ICourseRepository
+from app.application.interfaces.repositories.i_enrollment_repository import IEnrollmentRepository
 from app.presentation.schemas.calendar_schemas import (
     CalendarEventResponse, CreateCalendarEventRequest, UpdateCalendarEventRequest
 )
@@ -19,7 +21,10 @@ async def get_course_calendar(
     id: UUID,
     current_user: User = Depends(get_current_user),
     calendar_service: CalendarService = Depends(get_calendar_service),
+    course_repo: ICourseRepository = Depends(get_course_repo),
+    enrollment_repo: IEnrollmentRepository = Depends(get_enrollment_repo),
 ):
+    await ensure_course_access(id, current_user, course_repo, enrollment_repo)
     return await calendar_service.get_course_calendar(id)
 
 

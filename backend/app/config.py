@@ -40,6 +40,7 @@ class Settings(BaseSettings):
 
     # System settings (Admin managed defaults)
     support_email: str = "support@openlms.app"
+    app_logo_url: Optional[str] = None
     maintenance_mode: bool = False
 
     @property

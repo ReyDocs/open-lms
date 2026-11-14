@@ -175,5 +175,6 @@ def get_enrollment_service(
     course_repo: SQLAlchemyCourseRepository = Depends(get_course_repo),
     user_repo: SQLAlchemyUserRepository = Depends(get_user_repo),
     email_svc: ResendEmailService = Depends(get_email_service),
+    notification_svc: NotificationService = Depends(get_notification_service),
 ) -> EnrollmentService:
-    return EnrollmentService(enrollment_repo, course_repo, user_repo, email_svc)
+    return EnrollmentService(enrollment_repo, course_repo, user_repo, email_svc, notification_svc)

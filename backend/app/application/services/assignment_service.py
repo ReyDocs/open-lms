@@ -13,6 +13,7 @@ from app.application.dtos.assignment_dtos import (
 from app.domain.entities.assignment import Assignment
 from app.domain.entities.calendar_event import CalendarEvent
 from app.domain.entities.user import User
+from app.application.services.rich_text import sanitize_rich_text
 
 
 class AssignmentService:
@@ -50,7 +51,7 @@ class AssignmentService:
         assignment = Assignment(
             id=uuid4(),
             title=dto.title.strip(),
-            description=dto.description.strip(),
+            description=sanitize_rich_text(dto.description),
             total_points=dto.total_points,
             status=dto.status,
             due_date=dto.due_date,
@@ -81,7 +82,7 @@ class AssignmentService:
         if dto.title is not None:
             assignment.title = dto.title.strip()
         if dto.description is not None:
-            assignment.description = dto.description.strip()
+            assignment.description = sanitize_rich_text(dto.description)
         if dto.total_points is not None:
             assignment.total_points = dto.total_points
         if dto.due_date is not None:

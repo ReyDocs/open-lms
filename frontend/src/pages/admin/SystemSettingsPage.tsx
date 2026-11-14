@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 export const SystemSettingsPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [appName, setAppName] = useState('');
+  const [appLogoUrl, setAppLogoUrl] = useState('');
   const [supportEmail, setSupportEmail] = useState('');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -24,6 +25,7 @@ export const SystemSettingsPage: React.FC = () => {
   useEffect(() => {
     if (settings) {
       setAppName(settings.app_name);
+      setAppLogoUrl(settings.app_logo_url || '');
       setSupportEmail(settings.support_email);
       setMaintenanceMode(settings.maintenance_mode);
     }
@@ -36,6 +38,7 @@ export const SystemSettingsPage: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['system-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['public-app-settings'] });
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 3000);
     },
@@ -45,6 +48,7 @@ export const SystemSettingsPage: React.FC = () => {
     e.preventDefault();
     updateMutation.mutate({
       app_name: appName,
+      app_logo_url: appLogoUrl,
       support_email: supportEmail,
       maintenance_mode: maintenanceMode,
     });
@@ -83,6 +87,17 @@ export const SystemSettingsPage: React.FC = () => {
                   onChange={(e) => setAppName(e.target.value)}
                   placeholder="e.g. OpenLMS"
                 />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold">Application Logo URL</label>
+                <Input
+                  type="url"
+                  value={appLogoUrl}
+                  onChange={(e) => setAppLogoUrl(e.target.value)}
+                  placeholder="https://example.edu/logo.png"
+                />
+                <p className="text-xs text-muted-foreground">Leave blank to use the default OpenLMS mark.</p>
               </div>
 
               <div className="space-y-1">
