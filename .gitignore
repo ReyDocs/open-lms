@@ -51,4 +51,6 @@ frontend/dist-ssr/
 # OS
 .DS_Store
 Thumbs.db
-.agents/
+
+# Agents
+.agents/skills
