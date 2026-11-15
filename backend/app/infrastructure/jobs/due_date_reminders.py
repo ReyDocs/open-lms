@@ -11,7 +11,7 @@ from app.infrastructure.database.models.course_model import CourseModel
 from app.infrastructure.database.models.enrollment_model import EnrollmentModel
 from app.infrastructure.database.models.notification_model import NotificationModel
 from app.infrastructure.database.models.user_model import UserModel
-from app.infrastructure.external.resend_email_service import ResendEmailService
+from app.infrastructure.external.smtp_email_service import SmtpEmailService
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ async def send_due_date_reminders() -> None:
 
         await session.commit()
 
-    email_service = ResendEmailService()
+    email_service = SmtpEmailService()
     for title, message, link, emails in email_batches:
         if not emails:
             continue

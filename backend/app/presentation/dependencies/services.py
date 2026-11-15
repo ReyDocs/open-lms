@@ -15,7 +15,7 @@ from app.infrastructure.repositories.sqlalchemy_refresh_token_repo import SQLAlc
 
 from app.infrastructure.security.jwt_handler import JWTHandler
 from app.infrastructure.external.supabase_storage_service import SupabaseStorageService
-from app.infrastructure.external.resend_email_service import ResendEmailService
+from app.infrastructure.external.smtp_email_service import SmtpEmailService
 from app.infrastructure.external.google_oauth_service import GoogleOAuthService
 
 from app.application.services.user_service import UserService
@@ -32,7 +32,7 @@ from app.application.services.enrollment_service import EnrollmentService
 # Singletons / adapter instances
 jwt_handler = JWTHandler()
 storage_service = SupabaseStorageService()
-email_service = ResendEmailService()
+email_service = SmtpEmailService()
 google_oauth_service = GoogleOAuthService()
 
 
@@ -44,7 +44,7 @@ def get_storage_service() -> SupabaseStorageService:
     return storage_service
 
 
-def get_email_service() -> ResendEmailService:
+def get_email_service() -> SmtpEmailService:
     return email_service
 
 
@@ -97,7 +97,7 @@ def get_refresh_token_repo(db: AsyncSession = Depends(get_db)) -> SQLAlchemyRefr
 def get_notification_service(
     notif_repo: SQLAlchemyNotificationRepository = Depends(get_notification_repo),
     enrollment_repo: SQLAlchemyEnrollmentRepository = Depends(get_enrollment_repo),
-    email_svc: ResendEmailService = Depends(get_email_service),
+    email_svc: SmtpEmailService = Depends(get_email_service),
 ) -> NotificationService:
     return NotificationService(notif_repo, enrollment_repo, email_svc)
 
@@ -174,7 +174,7 @@ def get_enrollment_service(
     enrollment_repo: SQLAlchemyEnrollmentRepository = Depends(get_enrollment_repo),
     course_repo: SQLAlchemyCourseRepository = Depends(get_course_repo),
     user_repo: SQLAlchemyUserRepository = Depends(get_user_repo),
-    email_svc: ResendEmailService = Depends(get_email_service),
+    email_svc: SmtpEmailService = Depends(get_email_service),
     notification_svc: NotificationService = Depends(get_notification_service),
 ) -> EnrollmentService:
     return EnrollmentService(enrollment_repo, course_repo, user_repo, email_svc, notification_svc)

@@ -27,8 +27,13 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = 15
     jwt_refresh_token_expire_days: int = 7
 
-    # Email (Resend)
-    resend_api_key: Optional[str] = None
+    # Email (Direct SMTP)
+    smtp_host: Optional[str] = None
+    smtp_port: int = 587
+    smtp_user: Optional[str] = None
+    smtp_password: Optional[str] = None
+    smtp_use_tls: bool = False
+    smtp_starttls: bool = True
     email_from: str = "noreply@openlms.app"
 
     # CORS
