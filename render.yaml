@@ -17,7 +17,7 @@ services:
       - key: DEBUG
         value: "false"
       - key: DATABASE_URL
-        sync: false     # set manually in Render dashboard (contains password)
+        sync: false     # required: PostgreSQL URL (e.g. Supabase session pooler); do not use SQLite
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_KEY

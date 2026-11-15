@@ -32,6 +32,13 @@ async def _run_due_date_reminders():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    is_production = settings.app_env.lower() in {"production", "prod"}
+    is_sqlite = "sqlite" in settings.database_url.lower()
+    if is_production and is_sqlite:
+        raise RuntimeError(
+            "Production requires PostgreSQL. Set DATABASE_URL to the PostgreSQL connection URL in Render."
+        )
+
     # Initialize database tables on startup
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
