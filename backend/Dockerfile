@@ -1,4 +1,4 @@
-# ── Backend Dockerfile for Railway ────────────────────────────────────────────
+# ── Backend Dockerfile for Render ─────────────────────────────────────────────
 FROM python:3.12-slim
 
 # System deps
@@ -21,9 +21,9 @@ COPY backend/ .
 RUN adduser --disabled-password --gecos "" appuser && chown -R appuser /app
 USER appuser
 
-# Railway sets PORT env var; default to 8000 for local docker run
+# Render sets PORT env var; default to 8000 for local docker run
 ENV PORT=8000
 EXPOSE $PORT
 
-# Run with uvicorn; Railway injects PORT
+# Run with uvicorn; Render injects PORT
 CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --workers 2
