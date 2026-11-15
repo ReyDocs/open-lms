@@ -19,4 +19,18 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    // Output to dist/ — Vercel reads this
+    outDir: 'dist',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        // Split vendor chunks for better caching
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          query: ['@tanstack/react-query'],
+        },
+      },
+    },
+  },
 });
