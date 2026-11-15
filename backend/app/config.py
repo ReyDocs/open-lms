@@ -1,12 +1,16 @@
+from pathlib import Path
 from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
     app_name: str = "OpenLMS"
     app_env: str = "development"
     debug: bool = True
+    frontend_url: str = "http://localhost:5173"
 
     # Database
     database_url: str = "sqlite+aiosqlite:///./openlms.db"
@@ -53,7 +57,7 @@ class Settings(BaseSettings):
         return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(BASE_DIR / ".env"),
         env_file_encoding="utf-8",
         extra="ignore"
     )

@@ -78,7 +78,7 @@ class CourseService:
         self, current_user: User, page: int = 1, per_page: int = 20
     ) -> Tuple[List[CourseResponseDTO], int]:
         if current_user.is_admin():
-            courses, total = await self.course_repo.list_all(page, per_page)
+            return [], 0
         elif current_user.role == "teacher":
             courses, total = await self.course_repo.list_by_teacher(current_user.id, page, per_page)
         else:

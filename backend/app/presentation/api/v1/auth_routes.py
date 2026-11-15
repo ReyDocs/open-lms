@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from uuid import uuid4
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import RedirectResponse
 from app.config import settings
 from app.domain.entities.user import User
 from app.infrastructure.security.jwt_handler import JWTHandler
@@ -28,6 +29,13 @@ async def initiate_google_auth(
     state = req.state if req else None
     url = google_oauth.get_authorization_url(state)
     return GoogleAuthResponse(authorization_url=url)
+
+
+@router.get("/google/callback")
+async def google_callback_get(code: str = Query(...)):
+    """Handle the browser redirect from Google OAuth consent screen and forward to frontend."""
+    frontend_login_url = f"{settings.frontend_url.rstrip('/')}/login?code={code}"
+    return RedirectResponse(url=frontend_login_url)
 
 
 @router.post("/google/callback", response_model=TokenPairResponse)

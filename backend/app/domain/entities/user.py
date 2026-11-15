@@ -20,7 +20,7 @@ class User:
         return self.role == "admin"
 
     def is_teacher(self) -> bool:
-        return self.role in ("teacher", "admin")
+        return self.role == "teacher"
 
     def is_student(self) -> bool:
         return self.role == "student"

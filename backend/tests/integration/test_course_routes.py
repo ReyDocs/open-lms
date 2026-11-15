@@ -41,3 +41,24 @@ async def test_student_cannot_create_course(client, sample_student, auth_headers
         },
     )
     assert create_resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_admin_cannot_create_course(client, sample_admin, auth_headers):
+    headers = auth_headers(sample_admin)
+    create_resp = await client.post(
+        "/api/v1/courses",
+        headers=headers,
+        json={
+            "title": "Admin Course",
+            "code": "ADM101",
+            "description": "Admins cannot create courses per PRD",
+            "semester": "Fall 2026",
+        },
+    )
+    assert create_resp.status_code == 403
+
+    # Admin listing user courses returns empty list (all courses are accessed via /admin/courses)
+    list_resp = await client.get("/api/v1/courses", headers=headers)
+    assert list_resp.status_code == 200
+    assert list_resp.json()["data"] == []
