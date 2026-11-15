@@ -51,8 +51,8 @@ services:
       - key: EMAIL_FROM
         sync: false     # e.g. OpenLMS <you@gmail.com>
       - key: FRONTEND_URL
-        sync: false     # e.g. https://open-lms.vercel.app
+        sync: false     # e.g. https://your-site.netlify.app
       - key: ALLOWED_ORIGINS
-        sync: false     # e.g. https://open-lms.vercel.app
+        sync: false     # e.g. https://your-site.netlify.app
       - key: MAX_FILE_SIZE_MB
         value: "25"

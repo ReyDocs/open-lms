@@ -101,3 +101,20 @@ npm run dev
 ```
 
 Visit `http://localhost:5173` to access the application.
+
+### 3. Frontend Deployment (Netlify)
+
+Connect the repository to Netlify and deploy from the `main` branch. The root
+[`netlify.toml`](netlify.toml) sets `frontend` as the base directory, runs
+`npm run build`, and publishes `frontend/dist`. It also routes client-side
+paths back to `index.html` and configures static asset caching and security
+headers.
+
+Set this Netlify build environment variable to the deployed Render API URL:
+
+```env
+VITE_API_BASE_URL=https://your-backend.onrender.com/api/v1
+```
+
+Set the same Netlify site URL in Render's `FRONTEND_URL` and `ALLOWED_ORIGINS`
+environment variables so OAuth redirects and CORS allow the deployed frontend.

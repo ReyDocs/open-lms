@@ -20,7 +20,7 @@ export default defineConfig({
     },
   },
   build: {
-    // Output to dist/ — Vercel reads this
+    // Netlify publishes this directory.
     outDir: 'dist',
     sourcemap: false,
     rollupOptions: {

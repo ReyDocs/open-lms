@@ -46,7 +46,7 @@ A lightweight, open-source LMS that gives teachers full control over course mana
 | File Storage | Supabase Storage |
 | Authentication | Google OAuth 2.0 · JWT |
 | Email | Resend |
-| Deployment | Vercel (frontend) · Railway (backend) |
+| Deployment | Netlify (frontend) · Render (backend) |
 | Repository | Monorepo |
 
 ---
@@ -1016,10 +1016,10 @@ sequenceDiagram
 | **HTML Sanitization** | All rich-text fields sanitized with **bleach** before database storage (prevent XSS) |
 | **SQL Injection** | Prevented by **SQLAlchemy parameterized queries** — never raw string interpolation |
 | **RBAC** | Enforced at the route level via FastAPI `Depends()` guards (`require_admin`, `require_teacher`, etc.) |
-| **Rate Limiting** | PaaS-level DDoS protection (Railway/Vercel built-in) — app-level rate limiting in Phase 2 |
+| **Rate Limiting** | PaaS-level DDoS protection (Render/Netlify) — app-level rate limiting in Phase 2 |
 | **File Validation** | Validate file extension against allowed types list; enforce 25MB size limit server-side |
 | **Token Storage** | Refresh tokens stored as **bcrypt hashes** — never plaintext |
-| **HTTPS** | Enforced at PaaS level (Vercel and Railway provide automatic TLS) |
+| **HTTPS** | Enforced at PaaS level (Netlify and Render provide automatic TLS) |
 | **Secrets Management** | All secrets via environment variables — `.env` gitignored, `.env.example` committed |
 | **UUID PKs** | No sequential integer IDs exposed — prevents enumeration attacks |
 
@@ -1063,11 +1063,11 @@ flowchart LR
         Browser["🌐 Browser"]
     end
 
-    subgraph Vercel["Vercel"]
+    subgraph Netlify["Netlify"]
         FE["React SPA (Static)"]
     end
 
-    subgraph Railway["Railway"]
+    subgraph Render["Render"]
         BE["FastAPI Server"]
     end
 
@@ -1139,8 +1139,8 @@ VITE_APP_NAME=OpenLMS
 
 ### 11.3 CI/CD (MVP)
 
-- **Vercel:** Auto-deploy frontend on push to `main` branch
-- **Railway:** Auto-deploy backend on push to `main` branch
+- **Netlify:** Auto-deploy frontend on push to `main` branch
+- **Render:** Auto-deploy backend on push to `main` branch
 - **Branch previews:** Both platforms support preview deployments on PRs
 - **Phase 2:** Add GitHub Actions for linting (Ruff, ESLint), testing (pytest, Vitest), and build checks
 
@@ -1153,8 +1153,8 @@ $$
 The architecture is migration-ready:
 - Supabase Storage is **S3-compatible** → swap to AWS S3 with config change
 - Supabase PostgreSQL → AWS RDS or Cloud SQL (standard pg_dump migration)
-- Railway → AWS ECS/Fargate or GCP Cloud Run (containerize with Dockerfile)
-- Vercel → AWS CloudFront + S3 or GCP Cloud CDN
+- Render → AWS ECS/Fargate or GCP Cloud Run (containerize with Dockerfile)
+- Netlify → AWS CloudFront + S3 or GCP Cloud CDN
 
 ---
 
