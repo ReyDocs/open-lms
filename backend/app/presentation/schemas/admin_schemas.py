@@ -10,6 +10,7 @@ class SystemSettingsResponse(BaseModel):
     maintenance_mode: bool
     allowed_origins: str
     max_file_size_mb: int
+    staff_access_code: Optional[str] = None
 
 
 class UpdateSystemSettingsRequest(BaseModel):
@@ -17,6 +18,7 @@ class UpdateSystemSettingsRequest(BaseModel):
     app_logo_url: Optional[str] = None
     support_email: Optional[EmailStr] = None
     maintenance_mode: Optional[bool] = None
+    staff_access_code: Optional[str] = None
 
 
 class PublicAppSettingsResponse(BaseModel):

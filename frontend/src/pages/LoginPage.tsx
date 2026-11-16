@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { BookOpen, ShieldCheck, GraduationCap, School, LogIn, Sparkles } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 export const LoginPage: React.FC = () => {
-  const { isAuthenticated, loginWithDev, loginWithGoogle, handleGoogleCallback } = useAuth();
+  const { isAuthenticated, loginWithGoogle, handleGoogleCallback } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [loadingRole, setLoadingRole] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -26,16 +25,6 @@ export const LoginPage: React.FC = () => {
     }
   }, [searchParams, handleGoogleCallback, navigate]);
 
-  const handleDevLogin = async (role: 'admin' | 'teacher' | 'student', email: string, name: string) => {
-    setLoadingRole(role);
-    try {
-      await loginWithDev(email, role, name);
-      navigate('/dashboard', { replace: true });
-    } finally {
-      setLoadingRole(null);
-    }
-  };
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
       <div className="w-full max-w-md space-y-6">
@@ -51,14 +40,14 @@ export const LoginPage: React.FC = () => {
 
         <Card className="shadow-lg border">
           <CardHeader className="text-center pb-4">
-            <CardTitle>Sign In</CardTitle>
+            <CardTitle>Student Sign In</CardTitle>
             <CardDescription>Authenticate with your institutional Google account</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Google OAuth Login Button */}
             <Button
               className="w-full flex items-center justify-center gap-3 py-5 text-base font-semibold shadow-sm"
-              onClick={loginWithGoogle}
+              onClick={() => loginWithGoogle()}
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">
                 <path
@@ -80,59 +69,6 @@ export const LoginPage: React.FC = () => {
               </svg>
               <span>Continue with Google</span>
             </Button>
-
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground font-medium flex items-center gap-1">
-                  <Sparkles className="h-3 w-3 text-primary" /> Instant Demo / Evaluation Login
-                </span>
-              </div>
-            </div>
-
-            {/* Quick Demo Switcher */}
-            <div className="space-y-2">
-              <Button
-                variant="outline"
-                className="w-full justify-start gap-2 h-11"
-                disabled={!!loadingRole}
-                onClick={() => handleDevLogin('admin', 'admin@openlms.edu', 'System Admin')}
-              >
-                <ShieldCheck className="h-4 w-4 text-amber-500" />
-                <div className="text-left">
-                  <div className="text-xs font-semibold">Login as Administrator</div>
-                  <div className="text-[11px] text-muted-foreground">admin@openlms.edu</div>
-                </div>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="w-full justify-start gap-2 h-11"
-                disabled={!!loadingRole}
-                onClick={() => handleDevLogin('teacher', 'alan.turing@openlms.edu', 'Dr. Alan Turing')}
-              >
-                <GraduationCap className="h-4 w-4 text-primary" />
-                <div className="text-left">
-                  <div className="text-xs font-semibold">Login as Teacher (Dr. Turing)</div>
-                  <div className="text-[11px] text-muted-foreground">alan.turing@openlms.edu</div>
-                </div>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="w-full justify-start gap-2 h-11"
-                disabled={!!loadingRole}
-                onClick={() => handleDevLogin('student', 'alice.johnson@openlms.edu', 'Alice Johnson')}
-              >
-                <School className="h-4 w-4 text-emerald-500" />
-                <div className="text-left">
-                  <div className="text-xs font-semibold">Login as Student (Alice Johnson)</div>
-                  <div className="text-[11px] text-muted-foreground">alice.johnson@openlms.edu</div>
-                </div>
-              </Button>
-            </div>
           </CardContent>
         </Card>
       </div>

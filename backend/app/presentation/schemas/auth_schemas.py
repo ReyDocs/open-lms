@@ -36,3 +36,11 @@ class RefreshTokenRequest(BaseModel):
 
 class LogoutRequest(BaseModel):
     refresh_token: Optional[str] = None
+
+
+class VerifyStaffCodeRequest(BaseModel):
+    code: str
+
+
+class VerifyStaffCodeResponse(BaseModel):
+    valid: bool

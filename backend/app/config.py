@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     support_email: str = "support@openlms.app"
     app_logo_url: Optional[str] = None
     maintenance_mode: bool = False
+    staff_access_code: str = "OPENLMS-STAFF-2026"
 
     @property
     def async_database_url(self) -> str:

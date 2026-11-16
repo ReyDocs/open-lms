@@ -1,3 +1,4 @@
+from typing import Optional
 from datetime import datetime, timezone
 from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -14,7 +15,8 @@ from app.presentation.dependencies.services import (
 from app.presentation.dependencies.auth import get_current_user
 from app.presentation.schemas.auth_schemas import (
     GoogleAuthRequest, GoogleAuthResponse, GoogleCallbackRequest,
-    TokenPairResponse, RefreshTokenRequest, LogoutRequest, DevLoginRequest
+    TokenPairResponse, RefreshTokenRequest, LogoutRequest, DevLoginRequest,
+    VerifyStaffCodeRequest, VerifyStaffCodeResponse
 )
 from app.presentation.schemas.user_schemas import UserResponse
 
@@ -32,13 +34,21 @@ async def initiate_google_auth(
 
 
 @router.get("/google/callback")
-async def google_callback_get(code: str = Query(...)):
+async def google_callback_get(code: str = Query(...), state: Optional[str] = Query(None)):
     """Handle the browser redirect from Google OAuth consent screen and forward to frontend."""
     frontend = settings.frontend_url.strip()
     if not frontend.startswith("http://") and not frontend.startswith("https://"):
         frontend = f"https://{frontend}"
-    frontend_login_url = f"{frontend.rstrip('/')}/login?code={code}"
+    target = "staff" if state == "staff" else "login"
+    frontend_login_url = f"{frontend.rstrip('/')}/{target}?code={code}"
     return RedirectResponse(url=frontend_login_url)
+
+
+@router.post("/verify-staff-code", response_model=VerifyStaffCodeResponse)
+async def verify_staff_code(req: VerifyStaffCodeRequest):
+    expected_code = settings.staff_access_code or ""
+    is_valid = bool(req.code and req.code.strip() == expected_code.strip())
+    return VerifyStaffCodeResponse(valid=is_valid)
 
 
 @router.post("/google/callback", response_model=TokenPairResponse)

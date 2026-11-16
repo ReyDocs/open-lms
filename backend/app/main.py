@@ -48,6 +48,9 @@ async def lifespan(app: FastAPI):
         settings.app_name = persisted_settings.get("app_name", settings.app_name)
         settings.app_logo_url = persisted_settings.get("app_logo_url") or None
         settings.support_email = persisted_settings.get("support_email", settings.support_email)
+        settings.staff_access_code = persisted_settings.get(
+            "staff_access_code", settings.staff_access_code
+        )
         settings.maintenance_mode = persisted_settings.get(
             "maintenance_mode", str(settings.maintenance_mode)
         ).lower() == "true"

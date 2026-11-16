@@ -32,6 +32,7 @@ async def get_system_settings(
         maintenance_mode=values.get("maintenance_mode", str(settings.maintenance_mode)).lower() == "true",
         allowed_origins=settings.allowed_origins,
         max_file_size_mb=settings.max_file_size_mb,
+        staff_access_code=values.get("staff_access_code", settings.staff_access_code),
     )
 
 
@@ -55,6 +56,7 @@ async def update_system_settings(
         "app_logo_url": req.app_logo_url,
         "support_email": str(req.support_email) if req.support_email is not None else None,
         "maintenance_mode": str(req.maintenance_mode).lower() if req.maintenance_mode is not None else None,
+        "staff_access_code": req.staff_access_code if req.staff_access_code is not None else None,
     }
     for key, value in updates.items():
         if value is None:
@@ -74,6 +76,8 @@ async def update_system_settings(
         settings.support_email = str(req.support_email)
     if req.maintenance_mode is not None:
         settings.maintenance_mode = req.maintenance_mode
+    if req.staff_access_code is not None:
+        settings.staff_access_code = req.staff_access_code
 
     return SystemSettingsResponse(
         app_name=settings.app_name,
@@ -83,6 +87,7 @@ async def update_system_settings(
         maintenance_mode=settings.maintenance_mode,
         allowed_origins=settings.allowed_origins,
         max_file_size_mb=settings.max_file_size_mb,
+        staff_access_code=settings.staff_access_code,
     )
 
 

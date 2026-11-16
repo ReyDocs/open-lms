@@ -15,8 +15,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   loginWithDev: (email: string, role: string, full_name?: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
-  handleGoogleCallback: (code: string) => Promise<void>;
+  loginWithGoogle: (state?: string) => Promise<void>;
+  handleGoogleCallback: (code: string) => Promise<User>;
   logout: () => Promise<void>;
 }
 
@@ -69,12 +69,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginWithGoogle = async () => {
-    const res = await apiClient.post('/auth/google');
+  const loginWithGoogle = async (state?: string) => {
+    const res = await apiClient.post('/auth/google', state ? { state } : undefined);
     window.location.href = res.data.authorization_url;
   };
 
-  const handleGoogleCallback = async (code: string) => {
+  const handleGoogleCallback = async (code: string): Promise<User> => {
     setIsLoading(true);
     try {
       const res = await apiClient.post('/auth/google/callback', { code });
@@ -83,6 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('refresh_token', refresh_token);
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
+      return userData;
     } finally {
       setIsLoading(false);
     }

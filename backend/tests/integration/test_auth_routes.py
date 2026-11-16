@@ -53,3 +53,31 @@ async def test_refresh_token(client):
     new_tokens = refresh_resp.json()
     assert "access_token" in new_tokens
     assert new_tokens["refresh_token"] != refresh_token
+
+
+@pytest.mark.asyncio
+async def test_verify_staff_code(client):
+    valid_resp = await client.post(
+        "/api/v1/auth/verify-staff-code",
+        json={"code": "OPENLMS-STAFF-2026"},
+    )
+    assert valid_resp.status_code == 200
+    assert valid_resp.json()["valid"] is True
+
+    invalid_resp = await client.post(
+        "/api/v1/auth/verify-staff-code",
+        json={"code": "WRONG_CODE"},
+    )
+    assert invalid_resp.status_code == 200
+    assert invalid_resp.json()["valid"] is False
+
+
+@pytest.mark.asyncio
+async def test_google_callback_redirect(client):
+    res_student = await client.get("/api/v1/auth/google/callback?code=mock_code", follow_redirects=False)
+    assert res_student.status_code == 307
+    assert "/login?code=mock_code" in res_student.headers["location"]
+
+    res_staff = await client.get("/api/v1/auth/google/callback?code=mock_code&state=staff", follow_redirects=False)
+    assert res_staff.status_code == 307
+    assert "/staff?code=mock_code" in res_staff.headers["location"]

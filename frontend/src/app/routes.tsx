@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { LoginPage } from '@/pages/LoginPage';
+import { StaffLoginPage } from '@/pages/StaffLoginPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { CoursesListPage } from '@/pages/CoursesListPage';
 import { CoursePage } from '@/pages/CoursePage';
@@ -16,6 +17,7 @@ export const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/staff" element={<StaffLoginPage />} />
       <Route path="/" element={<AppShell />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />

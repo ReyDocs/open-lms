@@ -12,6 +12,7 @@ export const SystemSettingsPage: React.FC = () => {
   const [appLogoUrl, setAppLogoUrl] = useState('');
   const [supportEmail, setSupportEmail] = useState('');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [staffAccessCode, setStaffAccessCode] = useState('');
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const { data: settings, isLoading } = useQuery({
@@ -28,6 +29,7 @@ export const SystemSettingsPage: React.FC = () => {
       setAppLogoUrl(settings.app_logo_url || '');
       setSupportEmail(settings.support_email);
       setMaintenanceMode(settings.maintenance_mode);
+      setStaffAccessCode(settings.staff_access_code || '');
     }
   }, [settings]);
 
@@ -51,6 +53,7 @@ export const SystemSettingsPage: React.FC = () => {
       app_logo_url: appLogoUrl,
       support_email: supportEmail,
       maintenance_mode: maintenanceMode,
+      staff_access_code: staffAccessCode,
     });
   };
 
@@ -108,6 +111,19 @@ export const SystemSettingsPage: React.FC = () => {
                   onChange={(e) => setSupportEmail(e.target.value)}
                   placeholder="support@openlms.app"
                 />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold">Staff Access Code</label>
+                <Input
+                  type="text"
+                  value={staffAccessCode}
+                  onChange={(e) => setStaffAccessCode(e.target.value)}
+                  placeholder="e.g. OPENLMS-STAFF-2026"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Access key required by teachers and administrators to access the /staff login portal.
+                </p>
               </div>
 
               <div className="pt-2 border-t">
