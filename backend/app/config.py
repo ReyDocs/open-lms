@@ -53,6 +53,18 @@ class Settings(BaseSettings):
     maintenance_mode: bool = False
 
     @property
+    def async_database_url(self) -> str:
+        """Ensure database URL uses an async driver compatible with SQLAlchemy async engine."""
+        url = self.database_url
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif url.startswith("postgresql://"):
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        elif url.startswith("sqlite://"):
+            url = url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+        return url
+
+    @property
     def cors_origins(self) -> List[str]:
         return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
 

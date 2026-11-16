@@ -43,17 +43,17 @@ class GUID(TypeDecorator):
 
 # SQLite or PostgreSQL engine configuration
 connect_args = {}
-if "sqlite" in settings.database_url:
+if "sqlite" in settings.async_database_url:
     connect_args["check_same_thread"] = False
 
 engine = create_async_engine(
-    settings.database_url,
+    settings.async_database_url,
     echo=False,
     connect_args=connect_args,
 )
 
 # Enable foreign keys for SQLite
-if "sqlite" in settings.database_url:
+if "sqlite" in settings.async_database_url:
     @event.listens_for(engine.sync_engine, "connect")
     def set_sqlite_pragma(dbapi_connection, connection_record):
         cursor = dbapi_connection.cursor()
