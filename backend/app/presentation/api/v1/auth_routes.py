@@ -34,7 +34,10 @@ async def initiate_google_auth(
 @router.get("/google/callback")
 async def google_callback_get(code: str = Query(...)):
     """Handle the browser redirect from Google OAuth consent screen and forward to frontend."""
-    frontend_login_url = f"{settings.frontend_url.rstrip('/')}/login?code={code}"
+    frontend = settings.frontend_url.strip()
+    if not frontend.startswith("http://") and not frontend.startswith("https://"):
+        frontend = f"https://{frontend}"
+    frontend_login_url = f"{frontend.rstrip('/')}/login?code={code}"
     return RedirectResponse(url=frontend_login_url)
 
 
