@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional
 from uuid import UUID, uuid4
 from datetime import datetime, timezone
@@ -10,6 +11,8 @@ from app.application.services.notification_service import NotificationService
 from app.application.dtos.user_dtos import UserResponseDTO
 from app.domain.entities.enrollment import Enrollment
 from app.domain.entities.user import User
+
+logger = logging.getLogger(__name__)
 
 
 class EnrollmentService:
@@ -140,8 +143,8 @@ class EnrollmentService:
                     subject=f"Course Invitation: {course.code} {course.title}",
                     html_content=invite_html,
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Failed to send invite email to {clean_email}: {e}")
 
         return UserResponseDTO(
             id=student.id,
